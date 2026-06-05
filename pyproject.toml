@@ -1,0 +1,11 @@
+[project]
+name = "parcel-route"
+version = "1.0.0"
+description = "Same-day parcel router with a chaining hash table and a nearest-neighbor trip."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Alec Okelberry" }]
+
+[tool.setuptools]
+packages = ["routing"]
