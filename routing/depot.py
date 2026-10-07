@@ -141,7 +141,9 @@ def check_manifests(packages: ChainingHashTable) -> None:
         if "can only be on truck 2" in notes and truck_number != 2:
             raise ValueError(f"package {package.package_id} must ride on truck 2")
         if "delayed on flight" in notes and truck_number == 1:
-            raise ValueError(f"package {package.package_id} is not at the hub at 8:00 AM")
+            raise ValueError(
+                f"package {package.package_id} is not at the hub at 8:00 AM"
+            )
         if "wrong address" in notes and truck_number != 3:
             raise ValueError(f"package {package.package_id} needs the 10:20 AM address")
         if "must be delivered with" in notes:

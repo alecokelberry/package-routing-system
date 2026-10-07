@@ -20,7 +20,10 @@ def mileage_report(day: Day) -> str:
     lines.append(f"Total: {day.total_mileage:.1f} miles")
     late = [package for package in day.packages.values() if not package.on_time()]
     if late:
-        ids = ", ".join(str(package.package_id) for package in sorted(late, key=lambda p: p.package_id))
+        ids = ", ".join(
+            str(package.package_id)
+            for package in sorted(late, key=lambda p: p.package_id)
+        )
         lines.append(f"Missed deadlines: {ids}")
     else:
         lines.append("Every package is on time.")
@@ -48,7 +51,9 @@ def route_report(day: Day) -> str:
 def status_report(day: Day, when: float) -> str:
     lines = [f"Status at {format_time(when)}", ""]
     for truck in day.trucks:
-        lines.append(f"Truck {truck.truck_id}, departs {format_time(truck.departure_time or 0)}")
+        lines.append(
+            f"Truck {truck.truck_id}, departs {format_time(truck.departure_time or 0)}"
+        )
         lines.append(f"{'ID':<4} {'Deadline':<9} {'Status'}")
         for package_id in sorted(truck.package_ids):
             package = day.packages.lookup(package_id)

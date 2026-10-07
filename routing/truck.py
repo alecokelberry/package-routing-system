@@ -12,7 +12,9 @@ HUB_INDEX = 0
 class Truck:
     """A loaded truck: manifest, clock, and miles driven."""
 
-    def __init__(self, truck_id: int, package_ids: list[int], departure_time: float | None) -> None:
+    def __init__(
+        self, truck_id: int, package_ids: list[int], departure_time: float | None
+    ) -> None:
         self.truck_id = truck_id
         self.package_ids = list(package_ids)
         self.departure_time = departure_time
@@ -47,9 +49,13 @@ class Truck:
         remaining = list(self.package_ids)
         while remaining:
             nearest_id = remaining[0]
-            nearest_distance = _distance(packages, distances, index_of_address, location, nearest_id, clock)
+            nearest_distance = _distance(
+                packages, distances, index_of_address, location, nearest_id, clock
+            )
             for package_id in remaining[1:]:
-                distance = _distance(packages, distances, index_of_address, location, package_id, clock)
+                distance = _distance(
+                    packages, distances, index_of_address, location, package_id, clock
+                )
                 if distance < nearest_distance:
                     nearest_distance = distance
                     nearest_id = package_id
@@ -75,7 +81,9 @@ def _require(packages: ChainingHashTable, package_id: int) -> Package:
     return package
 
 
-def _distance(packages, distances, index_of_address, location: int, package_id: int, clock: float) -> float:
+def _distance(
+    packages, distances, index_of_address, location: int, package_id: int, clock: float
+) -> float:
     package = _require(packages, package_id)
     destination = index_of_address(package.address_at(clock))
     return distances[location][destination]

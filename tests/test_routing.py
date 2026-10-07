@@ -54,7 +54,9 @@ class DayTests(unittest.TestCase):
         miles = [round(truck.mileage, 1) for truck in self.day.trucks]
         self.assertEqual(miles, [34.0, 40.0, 33.4])
         self.assertEqual(round(self.day.total_mileage, 1), 107.4)
-        self.assertTrue(all(package.on_time() for package in self.day.packages.values()))
+        self.assertTrue(
+            all(package.on_time() for package in self.day.packages.values())
+        )
         for truck in self.day.trucks:
             self.assertEqual(len(truck.stops), len(truck.package_ids))
             times = [
