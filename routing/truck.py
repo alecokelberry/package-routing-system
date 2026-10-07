@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from routing.hash_table import ChainingHashTable
-from routing.package import Package
+from collections.abc import Callable
+
+from routing.package import Package, PackageTable
 
 AVERAGE_SPEED_MPH = 18.0
 HUB_INDEX = 0
+
+# Street text in, row of the distance matrix out.
+AddressIndex = Callable[[str], int]
 
 
 class Truck:
@@ -24,16 +28,19 @@ class Truck:
 
     def deliver(
         self,
-        packages: ChainingHashTable,
+        packages: PackageTable,
         distances: list[list[float]],
-        index_of_address,
-    ) -> None:
-        """Deliver this load one stop at a time.
+        index_of_address: AddressIndex,
+    ) -> float:
+        """Deliver this load one stop at a time and return the time back at the hub.
 
         From the current street, the next stop is the closest package still
         on the truck. The route is not planned in advance, so an address that
         gets corrected during the day is used on the next choice. The truck
         then returns to the hub so its driver can leave again.
+
+        Each choice scans the remaining packages, so a load of n packages
+        costs O(n^2) distance lookups.
         """
         if self.departure_time is None:
             raise RuntimeError(f"truck {self.truck_id} has no departure time")
@@ -41,49 +48,34 @@ class Truck:
         clock = self.departure_time
         location = HUB_INDEX
 
-        for package_id in self.package_ids:
-            package = _require(packages, package_id)
+        remaining = [_require(packages, package_id) for package_id in self.package_ids]
+        for package in remaining:
             package.truck_id = self.truck_id
             package.departure_time = self.departure_time
 
-        remaining = list(self.package_ids)
-        while remaining:
-            nearest_id = remaining[0]
-            nearest_distance = _distance(
-                packages, distances, index_of_address, location, nearest_id, clock
-            )
-            for package_id in remaining[1:]:
-                distance = _distance(
-                    packages, distances, index_of_address, location, package_id, clock
-                )
-                if distance < nearest_distance:
-                    nearest_distance = distance
-                    nearest_id = package_id
+        def miles_to(package: Package) -> float:
+            return distances[location][index_of_address(package.address_at(clock))]
 
-            self.mileage += nearest_distance
-            clock += nearest_distance / AVERAGE_SPEED_MPH
-            delivered = _require(packages, nearest_id)
-            delivered.delivery_time = clock
-            location = index_of_address(delivered.address_at(clock))
-            self.stops.append(nearest_id)
-            remaining.remove(nearest_id)
+        while remaining:
+            # min() keeps the first of equal distances, so ties go to manifest order.
+            nearest = min(remaining, key=miles_to)
+            distance = miles_to(nearest)
+            self.mileage += distance
+            clock += distance / AVERAGE_SPEED_MPH
+            nearest.delivery_time = clock
+            location = index_of_address(nearest.address_at(clock))
+            self.stops.append(nearest.package_id)
+            remaining.remove(nearest)
 
         return_leg = distances[location][HUB_INDEX]
         self.mileage += return_leg
         clock += return_leg / AVERAGE_SPEED_MPH
         self.return_time = clock
+        return clock
 
 
-def _require(packages: ChainingHashTable, package_id: int) -> Package:
+def _require(packages: PackageTable, package_id: int) -> Package:
     package = packages.lookup(package_id)
     if package is None:
-        raise KeyError(package_id)
+        raise KeyError(f"no package {package_id} in the table")
     return package
-
-
-def _distance(
-    packages, distances, index_of_address, location: int, package_id: int, clock: float
-) -> float:
-    package = _require(packages, package_id)
-    destination = index_of_address(package.address_at(clock))
-    return distances[location][destination]

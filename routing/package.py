@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import TypeAlias
+
+from routing.hash_table import ChainingHashTable
 from routing.timeutil import format_time, parse_time, to_minutes
 
 # End of day is 5:00 PM. Packages without a morning deadline are due then.
@@ -72,7 +75,8 @@ class Package:
         """Status a supervisor would see if they asked at `when`."""
         if when < self.hub_arrival_time:
             if "Delayed on flight" in self.notes:
-                return f"Delayed, arrives at the hub at {format_time(self.hub_arrival_time)}"
+                arrival = format_time(self.hub_arrival_time)
+                return f"Delayed, arrives at the hub at {arrival}"
             return "At the hub"
         if self.departure_time is None or when < self.departure_time:
             return f"At the hub since {format_time(self.hub_arrival_time)}"
@@ -84,3 +88,6 @@ class Package:
         return (
             f"Delivered at {format_time(self.delivery_time)} by truck {self.truck_id}"
         )
+
+
+PackageTable: TypeAlias = ChainingHashTable[int, Package]
